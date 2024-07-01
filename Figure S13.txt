@@ -1,0 +1,169 @@
+
+# library
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(ggpubr)
+library(venn)
+library(ggvenn)
+
+# load
+load("1_phage_Tn_IS_Integron_commonDf.RData")
+unique(phage_Integron_Tn_IS_df$MGE_type_final) # "Transposon" "IS"
+
+#
+Venn_df <- phage_Integron_Tn_IS_df %>% 
+  filter(DepthPG > 0) %>% 
+  select(ARG, MGE_type_final,sampleType) %>% unique()
+  
+unique(Venn_df$MGE_type_final) # "Transposon" "IS"
+
+# 
+Venn_df_Transposon <- Venn_df %>% filter(MGE_type_final == "Transposon")
+colnames(Venn_df_Transposon)[colnames(Venn_df_Transposon) == "MGE_type_final"] <- "Transposon"
+
+Venn_df_IS <- Venn_df %>% filter(MGE_type_final == "IS")
+colnames(Venn_df_IS)[colnames(Venn_df_IS) == "MGE_type_final"] <- "IS"
+
+Venn_combined_df <- merge(Venn_df_IS, Venn_df_Transposon, by = c("sampleType", "ARG"), all = TRUE)
+# save(Venn_combined_df, file = "2_Venn_combined_df.RData")
+
+# 
+unique(Venn_combined_df$sampleType) # "Farmland" "Forest"   "Gobi"     "Grass"    "Sludge"   "Tailings"
+
+# Tailings
+Venn_combined_df_Tailings_Transposon <- Venn_combined_df %>% filter(sampleType == "Tailings") %>% filter(Transposon == "Transposon")
+bb <- Venn_combined_df_Tailings_Transposon$ARG
+
+Venn_combined_df_Tailings_IS <- Venn_combined_df %>% filter(sampleType == "Tailings") %>% filter(IS == "IS")
+cc <- Venn_combined_df_Tailings_IS$ARG
+
+x <- list(Transposon=bb, IS=cc)
+x
+
+p_Tailings <-ggvenn::ggvenn(x,c("IS","Transposon"), fill_color = c("#d0c0a5", "#2e7d32"), 
+                            fill_alpha = 0.6,#改变图形透明度
+                            stroke_color="#616161",#边界线的颜色
+                            stroke_alpha = 0.5,#边界线的透明度
+                            text_size = 6)#调节字体大小
+p_Tailings <- p_Tailings + 
+  labs(subtitle = "Tailings") + 
+  theme(plot.subtitle = element_text(size = 16, colour = "black"))
+
+p_Tailings
+
+# sewage
+
+Venn_combined_df_Sludge_Transposon <- Venn_combined_df %>% filter(sampleType == "Sludge") %>% filter(Transposon == "Transposon")
+bb <- Venn_combined_df_Sludge_Transposon$ARG
+
+Venn_combined_df_Sludge_IS <- Venn_combined_df %>% filter(sampleType == "Sludge") %>% filter(IS == "IS")
+cc <- Venn_combined_df_Sludge_IS$ARG
+
+x <- list(Transposon=bb, IS=cc)
+x
+
+p_Sludge <-ggvenn::ggvenn(x,c("IS","Transposon"), fill_color = c("#d0c0a5", "#2e7d32"), 
+                          fill_alpha = 0.6,#改变图形透明度
+                          stroke_color="#616161",#边界线的颜色
+                          stroke_alpha = 0.5,#边界线的透明度
+                          text_size = 6)#调节字体大小
+p_Sludge <- p_Sludge + 
+  labs(subtitle = "Sewage") + 
+  theme(plot.subtitle = element_text(size = 16, face = "bold", 
+                                     colour = "black"))
+p_Sludge
+
+# farmland
+Venn_combined_df_farmland_Transposon <- Venn_combined_df %>% filter(sampleType == "Farmland") %>% filter(Transposon == "Transposon")
+bb <- Venn_combined_df_farmland_Transposon$ARG
+
+Venn_combined_df_farmland_IS <- Venn_combined_df %>% filter(sampleType == "Farmland") %>% filter(IS == "IS")
+cc <- Venn_combined_df_farmland_IS$ARG
+
+x <- list(Transposon=bb, IS=cc)
+x
+
+p_farmland <- ggvenn::ggvenn(x,c("IS","Transposon"), fill_color = c("#d0c0a5", "#2e7d32"), 
+                            fill_alpha = 0.6,#改变图形透明度
+                            stroke_color="#616161",#边界线的颜色
+                            stroke_alpha = 0.5,#边界线的透明度
+                            text_size = 6)#调节字体大小
+p_farmland <- p_farmland + 
+  labs(subtitle = "Farmland") + 
+  theme(plot.subtitle = element_text(size = 16, face = "bold", 
+                                     colour = "black"))
+p_farmland
+
+# forest
+
+Venn_combined_df_forest_Transposon <- Venn_combined_df %>% filter(sampleType == "Forest") %>% filter(Transposon == "Transposon")
+bb <- Venn_combined_df_forest_Transposon$ARG
+
+Venn_combined_df_forest_IS <- Venn_combined_df %>% filter(sampleType == "Forest") %>% filter(IS == "IS")
+cc <- Venn_combined_df_forest_IS$ARG
+
+x <- list(Transposon=bb, IS=cc)
+x
+
+p_forest <-ggvenn::ggvenn(x,c("IS","Transposon"), fill_color = c("#d0c0a5", "#2e7d32"), 
+                          fill_alpha = 0.6,#改变图形透明度
+                          stroke_color="#616161",#边界线的颜色
+                          stroke_alpha = 0.5,#边界线的透明度
+                          text_size = 6)#调节字体大小
+p_forest <- p_forest + 
+  labs(subtitle = "Forest") + 
+  theme(plot.subtitle = element_text(size = 16, face = "bold", 
+                                     colour = "black"))
+p_forest
+
+
+# grass
+Venn_combined_df_grass_Transposon <- Venn_combined_df %>% filter(sampleType == "Grass") %>% filter(Transposon == "Transposon")
+bb <- Venn_combined_df_grass_Transposon$ARG
+
+Venn_combined_df_grass_IS <- Venn_combined_df %>% filter(sampleType == "Grass") %>% filter(IS == "IS")
+cc <- Venn_combined_df_grass_IS$ARG
+
+x <- list(Transposon=bb, IS=cc)
+x
+
+p_grass <- ggvenn::ggvenn(x,c("IS","Transposon"), fill_color = c("#d0c0a5", "#2e7d32"), 
+                         fill_alpha = 0.6,#改变图形透明度
+                         stroke_color="#616161",#边界线的颜色
+                         stroke_alpha = 0.5,#边界线的透明度
+                         text_size = 6)#调节字体大小
+p_grass <- p_grass + 
+  labs(subtitle = "Grass") + 
+  theme(plot.subtitle = element_text(size = 16, face = "bold", 
+                                     colour = "black"))
+p_grass
+
+
+# gobi
+Venn_combined_df_gobi_Transposon <- Venn_combined_df %>% filter(sampleType == "Gobi") %>% filter(Transposon == "Transposon")
+bb <- Venn_combined_df_gobi_Transposon$ARG
+
+Venn_combined_df_gobi_IS <- Venn_combined_df %>% filter(sampleType == "Gobi") %>% filter(IS == "IS")
+cc <- Venn_combined_df_gobi_IS$ARG
+
+x <- list( Transposon=bb, IS=cc)
+x
+
+p_gobi <-ggvenn::ggvenn(x,c("IS","Transposon"), fill_color = c("#d0c0a5", "#2e7d32"), 
+                         fill_alpha = 0.6,#改变图形透明度
+                         stroke_color="#616161",#边界线的颜色
+                         stroke_alpha = 0.5,#边界线的透明度
+                         text_size = 6)#调节字体大小
+p_gobi <- p_gobi + 
+  labs(subtitle = "Gobi") + 
+  theme(plot.subtitle = element_text(size = 16,  
+                                     colour = "black"))
+p_gobi
+
+library(patchwork)
+
+p_Tailings + p_Sludge + p_farmland + p_forest + p_grass + p_gobi
+
+
+
