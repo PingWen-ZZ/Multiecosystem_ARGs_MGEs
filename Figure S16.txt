@@ -1,0 +1,80 @@
+
+# library
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+
+#load
+load("1_pRC_Rep.RData") 
+load("2_Plasmids_oriT_unique_df.Rdata") 
+load("1_plasmids_Length_df_1kb.Rdata") 
+load("1.plascad_corrected_df.Rdata") 
+
+# 
+colnames(Plasmids_oriT_unique_df)[which(colnames(Plasmids_oriT_unique_df) == "length")] <- "Length"
+
+# 
+Plasmids_oriT_unique_df <- left_join(Plasmids_oriT_unique_df, plasmids_Length_df_1kb[,c(2,4)], by =c("Contig"))
+
+Plasmids_oriT_unique_df$length[is.na(Plasmids_oriT_unique_df$length)] <- 0
+Plasmids_oriT_unique_df <- Plasmids_oriT_unique_df %>% filter(length != 0) 
+
+# 
+colnames(Plasmids_oriT_unique_df)[which(colnames(Plasmids_oriT_unique_df) == "Contig")] <- "Contigs"
+Plasmids_oriT_unique_df <- left_join(Plasmids_oriT_unique_df, plascad_corrected_df[,c(1,2)], by =c("Contigs"))
+unique(Plasmids_oriT_unique_df$Plasmid_type) # "mob_unconj" "unmob"      "Conj"  1274
+Plasmids_oriT_unique_df_unmob <- Plasmids_oriT_unique_df %>% filter(Plasmid_type == "unmob") # 608
+unique(Plasmids_oriT_unique_df_unmob$Contigs)
+
+# save(Plasmids_oriT_unique_df_unmob, file = "3_Plasmids_oriT_unique_df_unmob_1kb.RData")
+
+#### ------------
+load("3_RC_Rep_unmob_1kb.RData")
+load("3_Plasmids_oriT_unique_df_unmob_1kb.RData")
+
+save(Plasmids_oriT_unique_df_unmob, file = "oriT_unique_df_unmob.csv")
+save(Plasmids_RC_Rep_df_unmob, file = "RC_Rep_df_unmob.csv")
+
+# 查看oriT和RC-REP之间是不是有重复 ---------------------------------------------
+
+RC_REP_oriT_unmob_combined_df <- merge(Plasmids_oriT_unique_df_unmob %>% dplyr::select(Contigs) %>% unique(), 
+                                       Plasmids_RC_Rep_df_unmob %>% dplyr::select(Contigs) %>% unique(), 
+                                       by = c("Contigs")) 
+
+unique(RC_REP_oriT_unmob_combined_df$Contigs) # 
+
+write.csv(Plasmids_oriT_unique_df_unmob, file = "3_Plasmids_oriT_unique_df_unmob.csv")
+write.csv(Plasmids_RC_Rep_df_unmob, file = "3_Plasmids_RC_Rep_df_unmob.csv")
+
+# 将不同类型的oriT可视化 ---
+
+oriT_df <- Plasmids_oriT_unique_df_unmob %>% 
+  dplyr::select(Contigs, sample_name, sseqid, length, Plasmid_type)
+PlotDat <- oriT_df %>% group_by(sseqid) %>% summarise(num_oriT = n()) %>% arrange(desc(num_oriT))
+
+# 
+oriT_ranking <- PlotDat$sseqid[40:nrow(PlotDat)]
+
+PlotDat$sseqid[PlotDat$sseqid %in% oriT_ranking] <- "Others"
+PlotDat <- PlotDat %>% group_by(sseqid) %>%  # 将所有others合并
+  summarise(num_oriT=sum(num_oriT)) %>% filter(sseqid != "Others") %>% 
+  arrange(desc(num_oriT))
+
+# 
+PlotDat$oriT <- sapply(strsplit(PlotDat$sseqid, "_", fixed = T), "[[", 2)
+
+PlotDat$oriT <- factor(PlotDat$oriT, levels = c(PlotDat$oriT))
+
+p_oriT <- ggplot(PlotDat) + aes(x = oriT, y = num_oriT) +
+  geom_col(fill = "#4db6ac") +
+  labs(y = "Count") +
+  theme(axis.text.x = element_text(hjust = 0.5, vjust = 0.5)) + 
+  theme_bw(base_size = 15) +
+  theme(axis.title.x = element_text(face = "bold")) +
+  theme(axis.ticks = element_line(colour = "black"), axis.text = element_text(colour = "black")) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 0.5, vjust = 0.5))
+
+p_oriT
+
+
+
