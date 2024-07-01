@@ -1,0 +1,46 @@
+
+# library
+library(ggplot2)
+library(scales)
+library(ggpubr)
+library(ggprism)
+library(tidyverse)
+library(hrbrthemes)
+library(ggthemes)
+library(dplyr)
+
+# 
+load("1_Combined_results_diversity.RData")
+load("1_Ranking.RData")
+load("1_significance_diversity_byARGtype.RData")
+
+
+# 过滤掉overall
+combined_df <- combined_df %>% filter(drug_type != "Overall")
+combined_df$drug_type <- as.character(combined_df$drug_type)
+combined_df$drug_type <- capitalize(combined_df$drug_type)
+ARG_relAbund_df$drug_type <- capitalize(ARG_relAbund_df$drug_type)
+combined_df$MGE_type_final <- factor(combined_df$MGE_type_final, 
+                                     levels = c( 'Plasmid',"Phage",'ICE'))
+combined_df$sampleType <-  factor(combined_df$sampleType, 
+                                  levels = c('Tailings','Sewage','Farmland','Forest','Grass','Gobi'))
+combined_df$drug_type <- factor(combined_df$drug_type, levels = ARG_relAbund_df$drug_type)
+
+p_seperate <- combined_df %>% 
+  ggplot() +
+  geom_errorbar(aes(x = drug_type, fill = MGE_type_final,
+                    ymin = num_percent_mean-sd, ymax = num_percent_mean+sd),
+                stat= "identity", position = position_dodge(0.9),colour="black", alpha=1, size=0.3, width = 0.5) +
+  geom_bar( aes(x = drug_type, fill = MGE_type_final, weight = num_percent_mean), 
+            position = 'dodge',   color = NA,  width = 0.9) + 
+  scale_fill_manual(values = c('#d7660d','#fdd835' ,"#1976d2")) + 
+  facet_wrap(sampleType~., nrow =3, scales = "free_y")+
+  theme_prism(base_line_size = 0.5, border = F)  + 
+  theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust = 1))+ 
+  theme(legend.position = 'none') + xlab("") + 
+  ylab("Ratio of MGE-carrying ARG subtypes to the total ARG subtypes") + 
+  scale_y_continuous(expand = c(0,0)) # y = 0
+
+p_seperate
+
+# 以高 10 宽 15 导出  1_MGE_carried_ARG_diversity_seperate
