@@ -1,0 +1,50 @@
+
+# 
+load("1_Combined_results.RData")
+load("1_ICE_Ranking.RData")
+
+library(ggplot2)
+library(scales)
+library(ggpubr)
+library(ggprism)
+library(tidyverse)
+library(hrbrthemes)
+library(ggthemes)
+library(ggpattern)
+library(magick)
+library(Hmisc)
+
+# 
+combined_df$drug_type <- as.character(combined_df$drug_type)
+combined_df$drug_type <- capitalize(combined_df$drug_type)
+
+ARG_relAbund_df$drug_type <- capitalize(ARG_relAbund_df$drug_type)
+
+combined_df <- combined_df %>% filter(MGE_type_final != "IS") 
+combined_df <- combined_df %>% filter(MGE_type_final != "Integron") 
+combined_df <- combined_df %>% filter(drug_type != "Overall") 
+
+supplementary_df <- data.frame(MGE_type_final = rep(c("Transposon"), each = 2),
+                               drug_type = rep(c("Glycopeptide", "Rifamycin"), time = 1),
+                               num_percent_mean = 0,
+                               se = 0,
+                               sampleType = "Sewage")
+
+combined_df <- bind_rows(combined_df, supplementary_df)
+
+combined_df$drug_type <- factor(combined_df$drug_type, levels = c("Multidrug", "Glycopeptide", "Rifamycin"))
+
+p_ICE_diversity <- combined_df %>%
+  ggplot(aes(x = sampleType, y =num_percent_mean, fill = drug_type)) +
+  geom_errorbar(aes(x = sampleType, ymin = num_percent_mean-se, ymax = num_percent_mean+se), 
+                stat= "identity", position = position_dodge(0.9),colour="black", alpha=1, size=0.3, width = 0.5) +
+  geom_bar(stat= "identity", width = 0.9, position = "dodge", color =NA) + 
+  scale_fill_manual(values = c('#ef6c00','#c0ca33' ,"#66bb6a")) + 
+  theme_prism(base_line_size = 0.5, border = T)  + 
+  theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust = 1))+ 
+  theme(legend.position = 'right') + xlab("") + 
+  ylab("Ratio of ICE-transposon/IS/integron-carrying ARG \n subtypes to plasmid-borne ARG subtypes") +
+  scale_y_continuous(expand = c(0,0.005)) # y = 0
+
+p_ICE_diversity
+
