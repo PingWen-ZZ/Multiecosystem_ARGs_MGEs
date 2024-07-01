@@ -1,0 +1,169 @@
+
+
+# Note：全国样品画地图
+
+# library
+library(readxl)
+library(albersusa) # 
+library(biscale)
+library(sf)
+library(tidyverse)
+library(hrbrthemes)
+library(ggtext)
+library(scatterpie)
+library("ggsci")
+#library(legendMap) #加比例尺
+library(ggspatial)
+library(ggprism)
+library(reshape2)
+
+
+da <- read.csv("数据汇总20201008（完整版）.csv", header=T)
+da %>% select(1,2,3) %>% mutate(Habitats=str_replace(id,'.*Fa.*', "Farmland"))%>% mutate(Habitats=str_replace(Habitats,'.*Fo.*', "Forest")) %>%
+  mutate(Habitats=str_replace(Habitats,'.*Fo.*', "Forest")) %>% mutate(Habitats=str_replace(Habitats,'.*Go.*', "Gobi Desert")) %>%
+  mutate(Habitats=str_replace(Habitats,'.*Gr.*', "Grassland")) %>% mutate(Habitats=str_replace(Habitats,'.*T.*', "Mine wasteland")) %>% 
+  mutate(Habitats=str_replace(Habitats,'.*\\.D.*', "Mine wasteland")) -> daa
+daa[2:3]  <- round(daa[2:3], 0)
+
+daa %>% group_by(Lat, Long,Habitats) %>% summarise(N=n()) %>% mutate(Lat=str_replace(Lat, ".*", paste(Lat, "A", sep = "")),
+                                                                     Long=str_replace(Long, ".*", paste(Long, "A", sep = ""))) %>% ungroup() %>% 
+  spread( key = "Habitats",   value = "N", fill = 0) %>% mutate(Lat=str_replace(Lat, "A", ''),
+                                                                Long=str_replace(Long, "A", '')) -> daa2
+daa2$Lat <- as.double(daa2$Lat)
+daa2$Long <- as.double(daa2$Long)
+daa %>% group_by(Lat, Long) %>% summarise(N=n()) %>% left_join(daa2, by = c('Lat','Long')) %>% ungroup() %>%  
+  dplyr::mutate(regin= c(1:35)) %>% set_names('lat','lon','radius','farmland','forest','gobi','grass','tailings','regin')-> china_data
+
+#china_data <- read.csv('all_pie2.csv' ,header = 1)
+china_data_pro <- china_data %>% sf::st_as_sf(coords = c("lon", "lat"),crs = 4326)%>%
+  st_transform(crs =  "+proj=laea +lat_0=40 +lon_0=104")%>%
+  dplyr::mutate(lon = sf::st_coordinates(.)[,1], lat = sf::st_coordinates(.)[,2])%>% 
+  dplyr::select(farmland ,forest ,grass ,gobi ,tailings ,regin ,radius  ,lon,lat) %>% 
+  data.frame(stringsAsFactors = F) 
+
+#
+china_shp <- "中国省级地图GS（2019）1719号.geojson"
+nine <- "九段线GS（2019）1719号.geojson"
+china <- sf::read_sf(china_shp)
+nine_line <- sf::read_sf(nine)
+
+# china_data_pro %>% arrange(desc(radius)) -> china_data_pro
+# china_data_pro$lon %>% factor(china_data_pro$lon, levels=china_data_pro$lon)
+# china_data_pro$lat %>% factor(china_data_pro$lat, levels=china_data_pro$lat)
+p <- ggplot()+
+  geom_sf(data = china,fill="#cae0fc",size=.125,color="black") + 
+  geom_sf(data = nine_line,size=.125) + 
+  coord_sf(crs =  "+proj=laea +lat_0=40 +lon_0=104",  xlim = c(-2500000,2877844),ylim = c(-2387082,1654989)) +
+  scatterpie::geom_scatterpie(data=china_data_pro,sorted_by_radius = F,
+                              aes(x = lon,y = lat,r=radius*30000/3),
+                              cols=c('farmland','forest','grass','gobi','tailings'),color="white",
+                              alpha=0.8) +
+  annotation_north_arrow(location = "tl", which_north = "false",
+                         style = north_arrow_fancy_orienteering) +
+  theme(plot.subtitle = element_text(size = 27, 
+                                     colour = "black", hjust = 0.5), axis.line = element_line(colour = "gray30", 
+                                      size = 1, linetype = "solid"), axis.ticks = element_line(colour = "gray30"), 
+        axis.text = element_text(colour = "gray30" ,size = 20), 
+        axis.text.x = element_text(colour = "gray30" ,size = 20), 
+        axis.text.y = element_text(colour = "gray30" ,size = 20), 
+        panel.background = element_rect(fill = "azure2" )) +
+  #scale_fill_ucscgb(name="Habitat")+
+  scale_fill_prism(name="Habitat")+
+  labs(x = "Longitude", y = "Latitude", col = "gray30", size = 30,
+       fill = "Habitat", subtitle = "Sampling points distribution of  NCLDV in China")+
+  theme(axis.ticks = element_line(size = 0.6), 
+        axis.title = element_text(size = 22, 
+                                  colour = "gray30")) +theme(plot.subtitle = element_text(size = 32)) + theme(legend.text = element_text(size = 13), 
+                                                                                                                 legend.title = element_text(size = 15))
+p2 <- p+annotation_scale(location = "bl") +
+  geom_scatterpie_legend(china_data_pro$radius*30000/3,x = -2200000,y=-1800000,n = 2 ,
+                         labeller=function(x) x%/%3000/(10/3))
+p2
+
+library(ggprism)
+#
+library(cowplot)
+china_shp <- "全国.json"
+china <- st_read(china_shp)
+
+pp  <- ggplot() + theme(axis.text.x = element_text(size = 8 ,angle = 60), 
+                        axis.text.y = element_text(size = 8))+
+  geom_sf(data = china, colour = "black", fill="#cae0fc")+
+  coord_sf(xlim = c(117131.4,2115095), ylim = c(-4028017,-1877844),
+           crs = "+proj=laea +lat_0=40 +lon_0=104")+
+  theme(aspect.ratio = 1.25,
+        panel.border = element_rect(fill = NA, colour = "#525252"),
+        plot.margin = unit(c(0,0,0,0),"mm")) + theme(axis.text.x = element_text(colour = "black"), 
+                                                     axis.text.y = element_text(colour = "black")) +
+  theme(axis.text.x = element_text(vjust = 0.5))
+
+aa <- ggdraw() + 
+  draw_plot(p2) +
+  draw_plot(pp, x = 0.675, y = 0.08, width = 0.1, height = 0.3)
+aa
+ggsave(width  =13 ,height   = 7,"1235552.pdf")
+
+
+# Note：画sewage生境的地图 --------------------------------------------------
+
+library(maps)
+library(ggplot2)
+library(sp)
+library(maptools) 
+library(tidyverse)
+
+#
+world <- map_data("world")
+
+# 
+world <- filter(world, lat>=-60 & lat<=90) 
+
+# 
+nrow(world) 
+
+# 
+set.seed(100)
+#
+hanghao <- sample(1:94680, 50, replace = F) 
+# 
+point <- world[hanghao,][1:2]
+
+# 
+set.seed(100)
+point <- data.frame(point, SOC = runif(50, min = 8, max = 50), # 
+                    Soil_type = sample(x=c("A","B","C","D"), 50, replace = T ))
+# 
+str(point) 
+
+mapworld<-borders("world",regions=".", colour = "gray50",fill="#FFF2CC", size=0.01 ) # 
+mp<-ggplot(data = point)+mapworld+ylim(-60,90)# 
+print(mp)
+
+# 
+load("F:/7_MGE/3.MGE types abundance diversity and composition/1.GeoInformation_all.Rdata")
+
+Sewage_information <- All_location_df %>% filter(Habitat == "S") %>%
+  select(location, longitude, latitude)
+
+Sewage_information$SOC <- rep(1)
+
+# 
+mapworld<-borders("world",regions=".", colour = "gray50",fill="#FFF2CC", size=0.01 ) 
+mp<-ggplot(data = Sewage_information)+mapworld+ylim(-60,90)
+print(mp)
+
+mp2<- mp+ 
+  geom_point(aes(x=Sewage_information$longitude, 
+                 y=Sewage_information$latitude 
+      ), 
+             alpha=0.5, color = "#7986cb", size = 3)+ 
+  geom_text(aes(x=Sewage_information$longitude,  
+                y=Sewage_information$latitude,
+                label = Sewage_information$location
+  ), size = 2) +
+
+  labs(x="Longitude",y="Latitude") 
+
+mp2
+
+#
