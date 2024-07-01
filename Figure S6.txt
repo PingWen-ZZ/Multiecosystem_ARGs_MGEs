@@ -1,0 +1,178 @@
+
+# MGE_taxonomy数据分析, 这里只分析门水平和种水平
+
+# library
+library(dplyr)
+library(reshape2)
+library(ggplot2)
+
+# load
+load("4_MGE_taxonomy_mapping_total_df.Rdata")
+remove(MGE_Class_mapping_total_df, MGE_Family_mapping_total_df, MGE_Genus_mapping_total_df, MGE_Order_mapping_total_df, MGE_Species_mapping_total_df)
+MGE_Phylum_mapping_total_df$sampleType <- sapply(strsplit(MGE_Phylum_mapping_total_df$sample_name, "_", fixed = T), "[[", 2)
+
+
+# 1.门水平
+MGE_Phylum_mapping_total_df <- MGE_Phylum_mapping_total_df %>% filter(Phylum != "Others")
+MGE_Phylum_mapping_total_df <- MGE_Phylum_mapping_total_df %>% filter(sampleName != "ZJ.T5")
+MGE_Phylum_mapping_total_df <- MGE_Phylum_mapping_total_df %>% filter(sampleName != "ZJ.T9")
+
+Total_phylum_df <- MGE_Phylum_mapping_total_df %>% group_by(sampleName) %>% summarise(DepthPG = sum(DepthPG)) %>% as.data.frame()
+
+MGE_Phylum_mapping_total_df$total_Phylum <- sapply(MGE_Phylum_mapping_total_df$sampleName, 
+                                       function(x) Total_phylum_df$DepthPG[which(Total_phylum_df$sampleName == x)])
+
+MGE_Phylum_mapping_total_df$Phylum_percent <- MGE_Phylum_mapping_total_df$DepthPG/MGE_Phylum_mapping_total_df$total_Phylum 
+sum(MGE_Phylum_mapping_total_df$Phylum_percent) #352
+
+# 
+Phylum_relAbund_df <- MGE_Phylum_mapping_total_df %>% dplyr::group_by(Phylum) %>%
+  dplyr::summarise(meanpercent=mean(Phylum_percent)) %>%
+  as.data.frame() %>% 
+  arrange(desc(meanpercent))
+
+otherTaxonomy <- Phylum_relAbund_df$Phylum[11:nrow(Phylum_relAbund_df)]
+
+# (3) replace other taxonomy with others
+MGE_Phylum_mapping_total_df$Phylum[MGE_Phylum_mapping_total_df$Phylum %in% otherTaxonomy] <- "Others"
+
+MGE_Phylum_mapping_total_df <- MGE_Phylum_mapping_total_df %>% group_by(sampleName, Phylum) %>%  
+  summarise(Phylum_percent=sum(Phylum_percent), sampleType = unique(sampleType))
+
+#
+MGE_Phylum_mapping_total_df_width <- dcast(MGE_Phylum_mapping_total_df, sampleName+sampleType~MGE_Phylum_mapping_total_df$Phylum, value.var = "Phylum_percent")
+MGE_Phylum_mapping_total_df_width[is.na(MGE_Phylum_mapping_total_df_width)] <- 0
+
+MGE_Phylum_mapping_total_df <- melt(MGE_Phylum_mapping_total_df_width, variable.name = "Phylum", value.name = "Phylum_percent") #3872
+
+str(MGE_Phylum_mapping_total_df) # factor
+MGE_Phylum_mapping_total_df$Phylum <- as.character(MGE_Phylum_mapping_total_df$Phylum)
+
+# 
+MGE_Phylum_mapping_total_df <- MGE_Phylum_mapping_total_df %>% group_by(sampleType, Phylum) %>% 
+  summarise(Phylum_percent=mean(Phylum_percent))
+
+sum(MGE_Phylum_mapping_total_df$Phylum_percent)
+
+# plot
+MGE_Phylum_mapping_total_df$Phylum <- factor(MGE_Phylum_mapping_total_df$Phylum, 
+                                  levels = c("Others", "Candidatus Rokubacteria", "Planctomycetota", "Verrucomicrobia","Gemmatimonadetes",
+                                             "Bacteroidota","Firmicutes","Chloroflexi","Actinobacteria","Acidobacteria","Proteobacteria")) 
+
+MGE_Phylum_mapping_total_df$sampleType <- factor(MGE_Phylum_mapping_total_df$sampleType, levels = c("tailings","Sludge","farmland","forest","grass","gobi"))
+
+p_MGE_phylum <- ggplot(MGE_Phylum_mapping_total_df, aes(x = sampleType, y = Phylum_percent, fill=Phylum))  + geom_col(width = 0.6) +  
+  #scale_fill_manual(values = c("#9FCD99", "#FFDD71","#DFC27D", "#ce3d36", "#e9a91f", "#D9F0D3", "#D1E5F0", "#5c6bc0","#FFB977","#B2AD8F","gray")) + 
+  scale_fill_manual(values = c("gray","#6eafd4","#bbdefb","#b67b40", "#fb8d46", "#fcbd89", "#3a9693", "#c5e5e0","#7fb7ae","#f8eac8","#ddc17f")) + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust = 0.5)) + 
+  theme_bw(base_size = 20) +
+  scale_y_continuous(expand = c(0.0001, 0.015)) +
+  scale_x_discrete(expand = c(0.12, 0.02)) +
+  xlab("") + ylab("composition of MGEs") + #+ guides(fill = guide_legend(nrow=2)) 
+  theme(legend.position="right") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank()) + 
+  scale_x_discrete(labels = c("tailings" = "Tailings", "Sludge" = "Sewage", "farmland" = "Farmland", 
+                              "forest" = "Forest","grass" = "Grass","gobi" = "Gobi"))# + coord_flip() +
+
+p_MGE_phylum +labs(fill="Phylum")
+
+# 2. Family ----------------------
+# load
+load("4_MGE_taxonomy_mapping_total_df.Rdata")
+remove(MGE_Phylum_mapping_total_df,ARG_Class_mapping_total_df, ARG_Genus_mapping_total_df, ARG_Order_mapping_total_df, ARG_Species_mapping_total_df)
+ARG_Family_mapping_total_df$sampleType <- sapply(strsplit(ARG_Family_mapping_total_df$sample_name, "_", fixed = T), "[[", 2)
+
+
+ARG_Family_mapping_total_df <- ARG_Family_mapping_total_df %>% filter(Family != "Others")
+ARG_Family_mapping_total_df <- ARG_Family_mapping_total_df %>% filter(sampleName != "ZJ.T5")
+ARG_Family_mapping_total_df <- ARG_Family_mapping_total_df %>% filter(sampleName != "ZJ.T9")
+
+Total_family_df <- ARG_Family_mapping_total_df %>% group_by(sampleName) %>% summarise(DepthPG = sum(DepthPG)) %>% as.data.frame()
+
+ARG_Family_mapping_total_df$total_Family <- sapply(ARG_Family_mapping_total_df$sampleName, 
+                                                   function(x) Total_family_df$DepthPG[which(Total_family_df$sampleName == x)])
+
+ARG_Family_mapping_total_df$Family_percent <- ARG_Family_mapping_total_df$DepthPG/ARG_Family_mapping_total_df$total_Family 
+
+# (2)  beyond top 15 are others 
+
+Family_relAbund_df <- ARG_Family_mapping_total_df %>% dplyr::group_by(Family) %>%
+  dplyr::summarise(meanpercent=mean(Family_percent)) %>% 
+  as.data.frame() %>% 
+  arrange(desc(meanpercent))
+
+otherTaxonomy <- Family_relAbund_df$Family[16:nrow(Family_relAbund_df)] 
+
+#
+ARG_Family_mapping_total_df$Family[ARG_Family_mapping_total_df$Family %in% otherTaxonomy] <- "Others"
+
+ARG_Family_mapping_total_df <- ARG_Family_mapping_total_df %>% group_by(sampleName, Family) %>%  
+  summarise(Family_percent=sum(Family_percent), sampleType = unique(sampleType))
+
+# remove others
+
+ARG_Family_mapping_total_df <- ARG_Family_mapping_total_df %>% filter(Family != "Others")
+
+Total_family_df <- ARG_Family_mapping_total_df %>% group_by(sampleName) %>% summarise(DepthPG = sum(Family_percent)) %>% as.data.frame()
+
+ARG_Family_mapping_total_df$total_Family <- sapply(ARG_Family_mapping_total_df$sampleName, 
+                                                   function(x) Total_family_df$DepthPG[which(Total_family_df$sampleName == x)])
+
+ARG_Family_mapping_total_df$Family_percent <- ARG_Family_mapping_total_df$Family_percent/ARG_Family_mapping_total_df$total_Family
+
+sum(ARG_Family_mapping_total_df$Family_percent) #352
+
+# 
+ARG_Family_mapping_total_df_width <- dcast(ARG_Family_mapping_total_df, sampleName+sampleType~ARG_Family_mapping_total_df$Family, value.var = "Family_percent")
+ARG_Family_mapping_total_df_width[is.na(ARG_Family_mapping_total_df_width)] <- 0
+
+ARG_Family_mapping_total_df <- melt(ARG_Family_mapping_total_df_width, variable.name = "Family", value.name = "Family_percent") #3872
+
+str(ARG_Family_mapping_total_df) # factor
+ARG_Family_mapping_total_df$Family <- as.character(ARG_Family_mapping_total_df$Family)
+
+significance_df <- ARG_Family_mapping_total_df 
+
+# 
+ARG_Family_mapping_total_df <- ARG_Family_mapping_total_df %>% group_by(sampleType, Family) %>% 
+  summarise(Family_percent=mean(Family_percent))
+
+sum(ARG_Family_mapping_total_df$Family_percent)
+
+# 
+ARG_Family_mapping_total_df$Family[which(ARG_Family_mapping_total_df$Family == "Clostridiales Family XVII. Incertae Sedis")] <- "Clostridiales"
+
+# plot
+
+ARG_Family_mapping_total_df$Family <- factor(ARG_Family_mapping_total_df$Family, 
+                                             levels = c("Carnobacteriaceae","Treboniaceae","Clostridiales","Thermoleophilaceae", "Xanthomonadaceae",
+                                                       "Rubrobacteraceae", "Thiobacillaceae","Gemmatimonadaceae","Moraxellaceae","Pseudomonadaceae", 
+                                                       "Comamonadaceae","Nitrobacteraceae","Nocardioidaceae","Leptotrichiaceae","Sphingomonadaceae"))
+
+ARG_Family_mapping_total_df$sampleType <- factor(ARG_Family_mapping_total_df$sampleType, levels = c("tailings","Sludge","farmland","forest","grass","gobi"))
+
+p_ARG_family <- ggplot(ARG_Family_mapping_total_df, aes(x = sampleType, y = Family_percent, fill=Family))  + geom_col(width = 0.6) +  
+  #scale_fill_manual(values = c("#9FCD99", "#FFDD71","#DFC27D", "#ce3d36", "#e9a91f", "#D9F0D3", "#D1E5F0", "#5c6bc0","#FFB977","#B2AD8F","gray")) + 
+  scale_fill_manual(values = c("#C7E9B4","#EDF8B1", "#FFF7FB", "#FCC5C0", "#A6BDDB","#6eafd4","#bbdefb","#b67b40", "#fb8d46", "#fcbd89", "#3a9693", "#c5e5e0","#7fb7ae","#f8eac8","#ddc17f")) + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust = 0.5)) + 
+  theme_bw(base_size = 20) +
+  scale_y_continuous(expand = c(0.0001, 0.015)) +
+  scale_x_discrete(expand = c(0.12, 0.02)) +
+  xlab("") + ylab("Phyla composition of ARGs") + #+ guides(fill = guide_legend(nrow=2)) 
+  theme(legend.position="right") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank()) + 
+  scale_x_discrete(labels = c("tailings" = "Tailings", "Sludge" = "Sewage", "farmland" = "Farmland", 
+                              "forest" = "Forest","grass" = "Grass","gobi" = "Gobi"))# + coord_flip() +
+
+p_ARG_family +labs(fill="")
+
+# 显著性计算
+
+
+
+
+
