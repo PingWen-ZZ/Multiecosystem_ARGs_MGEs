@@ -1,0 +1,31 @@
+sampleID	location	sampleTypes
+ERR1713332.S	 Australia_Woden	Sewage
+ERR1713333.S	 Australia_Melbourne	Sewage
+ERR1713334.S	 Austria_Vienna	Sewage
+ERR1713335.S	 Bulgaria_Sofia	Sewage
+ERR1713336.S	 Brasil_Belem	Sewage
+ERR1713337.S	 Brasil_Belem	Sewage
+ERR1713338.S	 Botswana_Palapye	Sewage
+ERR1713339.S	 Canada_Regina	Sewage
+ERR1713340.S	 Canada_Calgary	Sewage
+ERR1713341.S	 Canada_Toronto	Sewage
+ERR1713342.S	 Canada_Ottawa	Sewage
+ERR1713343.S	 Switzerland_Herrenschwanden	Sewage
+ERR1713344.S	 China_Guangzhou	Sewage
+ERR1713345.S	 Cote d'Ivoire_Abidjan	Sewage
+ERR1713347.S	 Czech Republic_Brno	Sewage
+ERR1713348.S	 Germany_Berlin	Sewage
+ERR1713349.S	 Denmark_Copenhagen	Sewage
+ERR1713350.S	 Denmark_Copenhagen	Sewage
+ERR1713351.S	 Denmark_Copenhagen	Sewage
+ERR1713353.S	 Galapagos_San Cristobal Island	Sewage
+ERR1713354.S	 Spain_Barcelona	Sewage
+ERR1713355.S	 Ethiopia_Addis Ababa	Sewage
+ERR1713356.S	 Finland_Helsinki	Sewage
+ERR1713357.S	 Georgia_Tbilisi	Sewage
+ERR1713358.S	 Ghana_Tamale	Sewage
+ERR1713359.S	 Gambia_Banjul	Sewage
+ERR1713360.S	 Croatia_Zagreb	Sewage
+ERR1713361.S	 Hungary_Budapest	Sewage
+ERR1713362.S	 India_Cochin	Sewage
+ERR1713363.S	 Ireland_Galway	Sewage
