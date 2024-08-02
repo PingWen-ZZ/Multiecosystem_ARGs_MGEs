@@ -1,0 +1,13 @@
+sampleTyple	longitude	latitude	sampleTyple.1	Habitat	location
+GS.Go5	102.25	38.48	GS	Go	GS_Go_Gobi
+GS.Go8	102.25	38.48	GS	Go	GS_Go_Gobi
+GS.Go9	102.25	38.48	GS	Go	GS_Go_Gobi
+QH.Go1	95.54	37.32	QH	Go	OH_Go_Gobi
+QH.Go3	95.54	37.32	QH	Go	OH_Go_Gobi
+QH.Go7	95.54	37.32	QH	Go	OH_Go_Gobi
+XJ.Go10	92.61	42.13	XJ	Go	XJ_TW_Gobi
+XJ.Go15	89.65	46.77	XJ	Go	XJ_QXHL_Gobi
+XJ.Go18	89.65	46.77	XJ	Go	XJ_QXHL_Gobi
+XJ.Go20	89.65	46.77	XJ	Go	XJ_QXHL_Gobi
+XJ.Go5	92.61	42.13	XJ	Go	XJ_TW_Gobi
+XJ.Go8	92.61	42.13	XJ	Go	XJ_TW_Gobi
