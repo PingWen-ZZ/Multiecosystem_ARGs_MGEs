@@ -1,0 +1,8 @@
+MGEs	MGEnumber
+ICE	452
+Integron	12107
+Others	12155
+phage	32028
+Transposon	92916
+IS	3810758
+plasmids	25850521
