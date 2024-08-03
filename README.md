@@ -1,5 +1,21 @@
-# Multiecosystem_ARGs_MGEs
-Analysis scripts
+This repository contains plotting codes for the manuscript “Global analysis of mobile genetic elements reveals their potential roles in shaping environmental antibiotic resistome”.
+
+The following packages are used:
+R (v4.1.0); ggplot2 (v3.4.4); dplyr (v1.1.4); stringr (v1.5.1); cowplot (v1.1.2); ggpubr (v0.6.0); patchwork (v1.1.2); eulerr (v7.0.0); data.table (v1.14.10); Hmisc (v5.1.0); scales (v1.3.0); ggsci (v3.0.0); reshape2 (v1.4.4); ggprism (v1.0.4); gg.gap (v1.3); ggbreak (v0.1.1); vegan (v2.6.4); tidyr (v1.3.0.9000); tibble (v3.2.1); gbm (v2.1.8.1); hrbrthemes (v0.8.0); ggthemes (v4.2.4); venn (v1.11); ggvenn (v0.1.10); ragg (v1.2.4); ggpattern (v1.0.1); gridExtra (v2.3)
+
+Installation guide：
+install.packages("ggplot2")/install.packages("dplyr")/install.packages("stringr")
+install.packages("cowplot")/install.packages("ggpubr")/install.packages("patchwork")
+install.packages("eulerr")/install.packages("data.table")/install.packages("Hmisc")
+install.packages("scales")/install.packages("ggsci")/install.packages("reshape2")
+install.packages("ggprism")/install.packages("gg.gap")/install.packages("ggbreak")
+install.packages("vegan")/install.packages("tidyr")/install.packages("tibble")
+install.packages("gbm")/install.packages("hrbrthemes")/install.packages("ggthemes")
+install.packages("venn")/install.packages("ggvenn")/install.packages("ragg")
+install.packages("ggpattern")/install.packages("gridExtra")
+
+The scripts can be run step by step on Rstudio or the R base interpreter. Below are detailed description of each separate R script:
+
 ### 1. ARG overview
 
 ```R
